@@ -9,6 +9,29 @@ mod prelude {
 
 use prelude::*;
 
-fn main() {
-    println!("Hello, world!");
+fn main() -> BError {
+    let mut context = BTermBuilder::simple80x50()
+        .with_title("Rusty Rogue")
+        .with_fps_cap(30.0)
+        .with_tile_dimensions(16, 16)
+        .build()?;
+
+    main_loop(context, State::new())
+}
+
+struct State {
+    map: Map,
+}
+
+impl State {
+    fn new() -> Self {
+        Self { map: Map::new() }
+    }
+}
+
+impl GameState for State {
+    fn tick(&mut self, ctx: &mut BTerm) {
+        ctx.cls();
+        self.map.render(ctx);
+    }
 }
