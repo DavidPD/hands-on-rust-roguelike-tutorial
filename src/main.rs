@@ -6,6 +6,9 @@ mod prelude {
     pub use bracket_lib::prelude::*;
     pub const SCREEN_WIDTH: i32 = 80;
     pub const SCREEN_HEIGHT: i32 = 50;
+    pub const DISPLAY_WIDTH: i32 = SCREEN_WIDTH / 2;
+    pub const DISPLAY_HEIGHT: i32 = SCREEN_HEIGHT / 2;
+    pub const TILE_SIZE: i32 = 32;
     pub use crate::map::*;
     pub use crate::map_builder::*;
     pub use crate::player::*;
@@ -14,10 +17,16 @@ mod prelude {
 use prelude::*;
 
 fn main() -> BError {
-    let context = BTermBuilder::simple80x50()
+    let font = "dungeonfont.png";
+    let context = BTermBuilder::new()
         .with_title("Rusty Rogue")
         .with_fps_cap(30.0)
-        .with_tile_dimensions(16, 16)
+        .with_dimensions(DISPLAY_WIDTH, DISPLAY_HEIGHT)
+        .with_tile_dimensions(TILE_SIZE, TILE_SIZE)
+        .with_resource_path("resources")
+        .with_font(font, TILE_SIZE, TILE_SIZE)
+        .with_simple_console(DISPLAY_WIDTH, DISPLAY_HEIGHT, font)
+        .with_simple_console_no_bg(DISPLAY_WIDTH, DISPLAY_HEIGHT, font)
         .build()?;
 
     main_loop(context, State::new())
