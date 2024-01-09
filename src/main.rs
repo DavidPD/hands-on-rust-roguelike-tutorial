@@ -7,6 +7,8 @@ mod systems;
 
 mod prelude {
     pub use bracket_lib::prelude::*;
+    pub use legion::systems::*;
+    pub use legion::world::*;
     pub use legion::*;
     pub const SCREEN_WIDTH: i32 = 80;
     pub const SCREEN_HEIGHT: i32 = 50;
@@ -49,9 +51,20 @@ impl State {
     fn new() -> Self {
         let mut rng = RandomNumberGenerator::new();
         let map_builder = MapBuilder::new(&mut rng);
+        let mut ecs = World::default();
+        let mut resources = Resources::default();
 
-        let ecs = World::default();
-        let resources = Resources::default();
+        resources.insert(map_builder.map);
+        resources.insert(Camera::new(map_builder.player_start));
+        spawn_player(&mut ecs, map_builder.player_start);
+
+        map_builder
+            .rooms
+            .iter()
+            .skip(1)
+            .map(|r| r.center())
+            .for_each(|pos| spawn_monster(&mut ecs, &mut rng, pos));
+
         Self {
             ecs,
             resources,
@@ -68,6 +81,7 @@ impl GameState for State {
         ctx.cls();
         self.resources.insert(ctx.key);
         self.systems.execute(&mut self.ecs, &mut self.resources);
+        render_draw_buffer(ctx).expect("Render Error");
         // self.map.render(ctx, &self.camera);
     }
 }
