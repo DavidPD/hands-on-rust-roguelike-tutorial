@@ -33,6 +33,7 @@ use prelude::*;
 fn main() -> BError {
     let font = "dungeonfont.png";
     let terminal_font = "terminal8x8.png";
+
     let context = BTermBuilder::new()
         .with_title("Rusty Rogue")
         .with_fps_cap(30.0)
@@ -43,7 +44,7 @@ fn main() -> BError {
         .with_font(terminal_font, 8, 8)
         .with_simple_console(DISPLAY_WIDTH, DISPLAY_HEIGHT, font)
         .with_simple_console_no_bg(DISPLAY_WIDTH, DISPLAY_HEIGHT, font)
-        .with_simple_console_no_bg(DISPLAY_WIDTH * 2, DISPLAY_HEIGHT * 2, terminal_font)
+        .with_simple_console_no_bg(SCREEN_WIDTH * 2, SCREEN_HEIGHT * 2, terminal_font)
         .build()?;
 
     main_loop(context, State::new())
@@ -118,5 +119,6 @@ impl State {
             ctx.set_active_console(i);
             ctx.cls()
         }
+        ctx.set_active_console(LAYER_MAP);
     }
 }

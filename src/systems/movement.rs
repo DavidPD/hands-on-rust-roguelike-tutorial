@@ -10,9 +10,7 @@ pub fn movement(
     ecs: &mut SubWorld,
     commands: &mut CommandBuffer,
 ) {
-    println!("Starting movement");
     if map.can_enter_tile(want_move.destination) {
-        println!("Can enter");
         commands.add_component(want_move.entity, want_move.destination);
 
         if ecs

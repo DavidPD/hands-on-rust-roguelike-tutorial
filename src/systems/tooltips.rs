@@ -9,15 +9,13 @@ pub fn tooltips(ecs: &SubWorld, #[resource] mouse_pos: &Point, #[resource] camer
     let offset = camera.offset();
     let map_pos = *mouse_pos + offset;
 
-    // println!("mouse {:?}", mouse_pos);
-
     let mut draw_batch = DrawBatch::new();
     draw_batch.target(LAYER_HUD);
+
     positions
         .iter(ecs)
         .filter(|(_, pos, _)| **pos == map_pos)
         .for_each(|(entity, _, name)| {
-            println!("Drawing tooltip {:?}", mouse_pos);
             let screen_pos = *mouse_pos * 4;
             let display =
                 if let Ok(health) = ecs.entry_ref(*entity).unwrap().get_component::<Health>() {

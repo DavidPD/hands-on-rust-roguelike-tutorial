@@ -36,5 +36,5 @@ impl Health {
     }
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Name(pub String);
