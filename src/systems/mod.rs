@@ -1,17 +1,15 @@
 pub use crate::prelude::*;
 
-use self::{
-    end_turn::*, entity_render::*, hud::*, map_render::*, movement::*, random_move::*, tooltips::*,
-};
-
-mod end_turn;
-mod entity_render;
-mod hud;
-mod map_render;
-mod movement;
-mod player_input;
-mod random_move;
-mod tooltips;
+dry_mods::mods! {
+    mod use end_turn;
+    mod use entity_render;
+    mod use hud;
+    mod use map_render;
+    mod use movement;
+    mod use player_input;
+    mod use random_move;
+    mod use tooltips;
+}
 
 pub fn build_input_scheduler() -> Schedule {
     Schedule::builder()
