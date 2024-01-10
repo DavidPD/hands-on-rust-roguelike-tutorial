@@ -1,0 +1,31 @@
+use crate::prelude::*;
+
+#[system]
+#[read_component(Point)]
+#[read_component(Name)]
+#[read_component(Health)]
+pub fn tooltips(ecs: &SubWorld, #[resource] mouse_pos: &Point, #[resource] camera: &Camera) {
+    let mut positions = <(Entity, &Point, &Name)>::query();
+    let offset = camera.offset();
+    let map_pos = *mouse_pos + offset;
+
+    // println!("mouse {:?}", mouse_pos);
+
+    let mut draw_batch = DrawBatch::new();
+    draw_batch.target(LAYER_HUD);
+    positions
+        .iter(ecs)
+        .filter(|(_, pos, _)| **pos == map_pos)
+        .for_each(|(entity, _, name)| {
+            println!("Drawing tooltip {:?}", mouse_pos);
+            let screen_pos = *mouse_pos * 4;
+            let display =
+                if let Ok(health) = ecs.entry_ref(*entity).unwrap().get_component::<Health>() {
+                    format!("{} : {} hp", &name.0, health.current)
+                } else {
+                    name.0.clone()
+                };
+            draw_batch.print(screen_pos, &display);
+        });
+    draw_batch.submit(10100).expect("Tooltip Batch Draw Error");
+}

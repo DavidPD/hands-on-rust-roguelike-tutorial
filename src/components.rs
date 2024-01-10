@@ -26,3 +26,15 @@ pub struct Health {
     pub current: i32,
     pub max: i32,
 }
+
+impl Health {
+    pub fn new(hp: i32) -> Self {
+        Self {
+            current: hp,
+            max: hp,
+        }
+    }
+}
+
+#[derive(Clone, PartialEq)]
+pub struct Name(pub String);

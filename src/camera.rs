@@ -26,4 +26,8 @@ impl Camera {
         self.top_y = player_position.y - DISPLAY_HEIGHT / 2;
         self.bottom_y = player_position.y + DISPLAY_HEIGHT / 2;
     }
+
+    pub fn offset(&self) -> Point {
+        Point::new(self.left_x, self.top_y)
+    }
 }
