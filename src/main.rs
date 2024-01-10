@@ -16,6 +16,9 @@ mod prelude {
     pub const DISPLAY_WIDTH: i32 = SCREEN_WIDTH / 2;
     pub const DISPLAY_HEIGHT: i32 = SCREEN_HEIGHT / 2;
     pub const TILE_SIZE: i32 = 32;
+    pub const LAYER_MAP: usize = 0;
+    pub const LAYER_ENTITIES: usize = 1;
+    pub const LAYER_HUD: usize = 2;
     pub use crate::camera::*;
     pub use crate::components::*;
     pub use crate::map::*;
@@ -29,6 +32,7 @@ use prelude::*;
 
 fn main() -> BError {
     let font = "dungeonfont.png";
+    let terminal_font = "terminal8x8.png";
     let context = BTermBuilder::new()
         .with_title("Rusty Rogue")
         .with_fps_cap(30.0)
@@ -36,8 +40,10 @@ fn main() -> BError {
         .with_tile_dimensions(TILE_SIZE, TILE_SIZE)
         .with_resource_path("resources")
         .with_font(font, TILE_SIZE, TILE_SIZE)
+        .with_font(terminal_font, 8, 8)
         .with_simple_console(DISPLAY_WIDTH, DISPLAY_HEIGHT, font)
         .with_simple_console_no_bg(DISPLAY_WIDTH, DISPLAY_HEIGHT, font)
+        .with_simple_console_no_bg(DISPLAY_WIDTH * 2, DISPLAY_HEIGHT * 2, terminal_font)
         .build()?;
 
     main_loop(context, State::new())
@@ -82,10 +88,8 @@ impl State {
 
 impl GameState for State {
     fn tick(&mut self, ctx: &mut BTerm) {
-        ctx.set_active_console(0);
-        ctx.cls();
-        ctx.set_active_console(1);
-        ctx.cls();
+        self.clear_console(ctx);
+
         self.resources.insert(ctx.key);
 
         let current_state = self.resources.get::<TurnState>().unwrap().clone();
@@ -103,5 +107,15 @@ impl GameState for State {
         }
 
         render_draw_buffer(ctx).expect("Render Error");
+    }
+}
+
+impl State {
+    fn clear_console(&self, ctx: &mut BTerm) {
+        let num_layers = 2;
+        for i in 0..=num_layers {
+            ctx.set_active_console(i);
+            ctx.cls()
+        }
     }
 }
