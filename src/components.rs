@@ -47,3 +47,6 @@ pub struct WantsToAttack {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct ChasingPlayer;
+
+pub struct Item;
+pub struct AmuletOfYala;

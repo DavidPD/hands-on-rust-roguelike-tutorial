@@ -87,6 +87,7 @@ impl State {
         resources.insert(Camera::new(map_builder.player_start));
         resources.insert(TurnState::AwaitingInput);
         spawn_player(&mut ecs, map_builder.player_start);
+        spawn_amulet_of_yala(&mut ecs, map_builder.amulet_start);
 
         map_builder
             .rooms
