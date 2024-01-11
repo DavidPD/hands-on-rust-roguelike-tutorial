@@ -25,5 +25,5 @@ pub fn combat(ecs: &mut SubWorld, commands: &mut CommandBuffer) {
             println!("Health after attack: {}", health.current);
         }
         commands.remove(*message)
-    })
+    });
 }
