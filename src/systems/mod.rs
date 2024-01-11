@@ -10,6 +10,7 @@ dry_mods::mods! {
     mod use random_move;
     mod use tooltips;
     mod use combat;
+    mod use chasing;
 }
 
 pub fn build_input_scheduler() -> Schedule {
@@ -31,14 +32,15 @@ pub fn build_player_scheduler() -> Schedule {
         .flush()
         .add_system(map_render_system())
         .add_system(entity_render_system())
-        .add_system(end_turn_system())
         .add_system(hud_system())
+        .add_system(end_turn_system())
         .build()
 }
 
 pub fn build_monster_scheduler() -> Schedule {
     Schedule::builder()
         .add_system(random_move_system())
+        .add_system(chasing_system())
         .flush()
         .add_system(combat_system())
         .flush()
@@ -46,7 +48,7 @@ pub fn build_monster_scheduler() -> Schedule {
         .flush()
         .add_system(map_render_system())
         .add_system(entity_render_system())
-        .add_system(end_turn_system())
         .add_system(hud_system())
+        .add_system(end_turn_system())
         .build()
 }

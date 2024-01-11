@@ -1,3 +1,5 @@
+// #![warn(clippy::pedantic)]
+
 mod camera;
 mod components;
 mod map;
@@ -47,7 +49,9 @@ fn main() -> BError {
         .with_simple_console_no_bg(SCREEN_WIDTH * 2, SCREEN_HEIGHT * 2, terminal_font)
         .build()?;
 
-    main_loop(context, State::new())
+    let mut state = State::new();
+    state.start();
+    main_loop(context, state)
 }
 
 struct State {
@@ -60,6 +64,20 @@ struct State {
 
 impl State {
     fn new() -> Self {
+        let ecs = World::default();
+        let resources = Resources::default();
+        // These get recreated immediately on start, so they should probably just be optional.
+
+        Self {
+            ecs,
+            resources,
+            input_systems: build_input_scheduler(),
+            player_systems: build_player_scheduler(),
+            monster_systems: build_monster_scheduler(),
+        }
+    }
+
+    fn start(&mut self) {
         let mut rng = RandomNumberGenerator::new();
         let map_builder = MapBuilder::new(&mut rng);
         let mut ecs = World::default();
@@ -77,12 +95,36 @@ impl State {
             .map(|r| r.center())
             .for_each(|pos| spawn_monster(&mut ecs, &mut rng, pos));
 
-        Self {
-            ecs,
-            resources,
-            input_systems: build_input_scheduler(),
-            player_systems: build_player_scheduler(),
-            monster_systems: build_monster_scheduler(),
+        self.ecs = ecs;
+        self.resources = resources;
+    }
+
+    fn game_over(&mut self, ctx: &mut BTerm) {
+        ctx.set_active_console(LAYER_HUD);
+        ctx.print_color_centered(2, RED, BLACK, "Your quest has ended");
+        ctx.print_color_centered(
+            4,
+            WHITE,
+            BLACK,
+            "Slain by a monster, your hero's journey has come to a premature end.",
+        );
+        ctx.print_color_centered(
+            5,
+            WHITE,
+            BLACK,
+            "The Amulet of Yala remains unclaimed, and your home town is not saved.",
+        );
+
+        ctx.print_color_centered(
+            8,
+            YELLOW,
+            BLACK,
+            "Don't worry, you can always try again with a new hero.",
+        );
+        ctx.print_color_centered(9, GREEN, BLACK, "Press 1 to play again.");
+
+        if let Some(VirtualKeyCode::Key1) = ctx.key {
+            self.start();
         }
     }
 }
@@ -106,6 +148,7 @@ impl GameState for State {
             TurnState::MonsterTurn => self
                 .monster_systems
                 .execute(&mut self.ecs, &mut self.resources),
+            TurnState::GameOver => self.game_over(ctx),
         }
 
         render_draw_buffer(ctx).expect("Render Error");
