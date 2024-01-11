@@ -9,6 +9,7 @@ dry_mods::mods! {
     mod use player_input;
     mod use random_move;
     mod use tooltips;
+    mod use combat;
 }
 
 pub fn build_input_scheduler() -> Schedule {
@@ -26,6 +27,8 @@ pub fn build_player_scheduler() -> Schedule {
     Schedule::builder()
         .add_system(movement_system())
         .flush()
+        .add_system(combat_system())
+        .flush()
         .add_system(map_render_system())
         .add_system(entity_render_system())
         .add_system(end_turn_system())
@@ -36,6 +39,8 @@ pub fn build_player_scheduler() -> Schedule {
 pub fn build_monster_scheduler() -> Schedule {
     Schedule::builder()
         .add_system(random_move_system())
+        .flush()
+        .add_system(combat_system())
         .flush()
         .add_system(movement_system())
         .flush()
