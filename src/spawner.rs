@@ -9,6 +9,7 @@ pub fn spawn_player(ecs: &mut World, pos: Point) {
             glyph: to_cp437('@'),
         },
         Health::new(10),
+        FieldOfView::new(8),
     ));
 }
 
@@ -28,6 +29,7 @@ pub fn spawn_monster(ecs: &mut World, rng: &mut RandomNumberGenerator, pos: Poin
             color: ColorPair::new(WHITE, BLACK),
             glyph,
         },
+        FieldOfView::new(6),
     ));
 }
 

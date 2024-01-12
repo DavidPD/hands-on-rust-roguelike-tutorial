@@ -11,6 +11,7 @@ dry_mods::mods! {
     mod use tooltips;
     mod use combat;
     mod use chasing;
+    mod use fov;
 }
 
 pub fn build_input_scheduler() -> Schedule {
@@ -26,9 +27,11 @@ pub fn build_input_scheduler() -> Schedule {
 
 pub fn build_player_scheduler() -> Schedule {
     Schedule::builder()
+        .add_system(combat_system())
+        .flush()
         .add_system(movement_system())
         .flush()
-        .add_system(combat_system())
+        .add_system(fov_system())
         .flush()
         .add_system(map_render_system())
         .add_system(entity_render_system())
@@ -45,6 +48,8 @@ pub fn build_monster_scheduler() -> Schedule {
         .add_system(combat_system())
         .flush()
         .add_system(movement_system())
+        .flush()
+        .add_system(fov_system())
         .flush()
         .add_system(map_render_system())
         .add_system(entity_render_system())
