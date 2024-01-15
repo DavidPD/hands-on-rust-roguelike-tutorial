@@ -1,53 +1,66 @@
 use crate::prelude::*;
 
+mod empty;
+
 const NUM_ROOMS: usize = 20;
+
+pub trait MapArchitect {
+    fn build(&mut self, rng: &mut RandomNumberGenerator) -> MapBuilder;
+}
 
 pub struct MapBuilder {
     pub map: Map,
     pub rooms: Vec<Rect>,
+    pub monster_spawns: Vec<Point>,
     pub player_start: Point,
     pub amulet_start: Point,
 }
 
 impl MapBuilder {
-    pub fn new(rng: &mut RandomNumberGenerator) -> Self {
-        let mut mb = Self {
+    pub fn new() -> Self {
+        Self {
             map: Map::new(),
             rooms: Vec::new(),
+            monster_spawns: Vec::new(),
             player_start: Point::zero(),
             amulet_start: Point::zero(),
-        };
+        }
+    }
 
-        mb.fill(TileType::Wall);
-        mb.build_random_rooms(rng);
-        mb.build_corridors(rng);
-        mb.player_start = mb.rooms[0].center();
+    pub fn build(mut self, rng: &mut RandomNumberGenerator) -> Self {
+        self.fill(TileType::Wall);
+        self.build_random_rooms(rng);
+        self.build_corridors(rng);
+        self.player_start = self.rooms[0].center();
 
-        let dijkstra_map = DijkstraMap::new(
-            SCREEN_WIDTH,
-            SCREEN_HEIGHT,
-            &[mb.map.point2d_to_index(mb.player_start)],
-            &mb.map,
-            1024.0,
-        );
+        self.amulet_start = self.find_most_distant();
 
-        const UNREACHABLE: &f32 = &f32::MAX;
-        mb.amulet_start = mb.map.index_to_point2d(
-            dijkstra_map
-                .map
-                .iter()
-                .enumerate()
-                .filter(|(_, distance)| *distance < UNREACHABLE)
-                .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-                .unwrap()
-                .0,
-        );
-
-        mb
+        self
     }
 
     fn fill(&mut self, tile: TileType) {
         self.map.tiles.iter_mut().for_each(|t| *t = tile);
+    }
+
+    fn find_most_distant(&self) -> Point {
+        let flow_map = DijkstraMap::new(
+            SCREEN_WIDTH,
+            SCREEN_HEIGHT,
+            &vec![self.map.point2d_to_index(self.player_start)],
+            &self.map,
+            MAX_FLOWMAP_DISTANCE,
+        );
+
+        self.map.index_to_point2d(
+            flow_map
+                .map
+                .iter()
+                .enumerate()
+                .filter(|(_, dist)| *dist < UNREACHABLE)
+                .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+                .unwrap()
+                .0,
+        )
     }
 
     fn build_random_rooms(&mut self, rng: &mut RandomNumberGenerator) {

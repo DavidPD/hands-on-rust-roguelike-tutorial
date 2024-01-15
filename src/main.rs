@@ -21,6 +21,8 @@ mod prelude {
     pub const LAYER_MAP: usize = 0;
     pub const LAYER_ENTITIES: usize = 1;
     pub const LAYER_HUD: usize = 2;
+    pub const MAX_FLOWMAP_DISTANCE: f32 = 1024.0;
+    pub const UNREACHABLE: &f32 = &f32::MAX;
     pub use crate::camera::*;
     pub use crate::components::*;
     pub use crate::map::*;
@@ -79,7 +81,7 @@ impl State {
 
     fn start(&mut self) {
         let mut rng = RandomNumberGenerator::new();
-        let map_builder = MapBuilder::new(&mut rng);
+        let map_builder = MapBuilder::new().build(&mut rng);
         let mut ecs = World::default();
         let mut resources = Resources::default();
 

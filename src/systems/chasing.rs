@@ -15,7 +15,13 @@ pub fn chasing(ecs: &SubWorld, #[resource] map: &Map, commands: &mut CommandBuff
     let player_idx = map_idx(player_pos.x, player_pos.y);
     let search_targets = vec![player_idx];
 
-    let djikstra_map = DijkstraMap::new(SCREEN_WIDTH, SCREEN_HEIGHT, &search_targets, map, 1024.0);
+    let djikstra_map = DijkstraMap::new(
+        SCREEN_WIDTH,
+        SCREEN_HEIGHT,
+        &search_targets,
+        map,
+        MAX_FLOWMAP_DISTANCE,
+    );
 
     for (entity, pos, _, fov) in movers.iter(ecs) {
         if !fov.visible_tiles.contains(player_pos) {
