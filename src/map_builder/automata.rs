@@ -16,7 +16,7 @@ impl MapArchitect for CellularAutomataArchitect {
         let start = self.find_start(&mb.map);
         mb.player_start = start;
         mb.amulet_start = mb.find_most_distant();
-        mb.monster_spawns = self.spawn_monsters(&start, &mut mb.map, rng);
+        mb.monster_spawns = mb.spawn_monsters(&start, rng);
         mb
     }
 }
@@ -82,36 +82,5 @@ impl CellularAutomataArchitect {
             .0;
 
         map.index_to_point2d(closest_point)
-    }
-
-    fn spawn_monsters(
-        &self,
-        start: &Point,
-        map: &mut Map,
-        rng: &mut RandomNumberGenerator,
-    ) -> Vec<Point> {
-        const NUM_MONSTERS: usize = 50;
-        const MIN_SPAWN_DISTANCE: f32 = 10.0;
-        let mut spawnable_tiles: Vec<Point> = map
-            .tiles
-            .iter()
-            .enumerate()
-            .filter(|(idx, tile)| {
-                **tile == TileType::Floor
-                    && DistanceAlg::Pythagoras.distance2d(*start, map.index_to_point2d(*idx))
-                        > MIN_SPAWN_DISTANCE
-            })
-            .map(|(idx, _)| map.index_to_point2d(idx))
-            .collect();
-
-        let mut spawns = Vec::new();
-
-        for _ in 0..NUM_MONSTERS {
-            let target_index = rng.random_slice_index(&spawnable_tiles).unwrap();
-            spawns.push(spawnable_tiles[target_index]);
-            spawnable_tiles.remove(target_index);
-        }
-
-        spawns
     }
 }

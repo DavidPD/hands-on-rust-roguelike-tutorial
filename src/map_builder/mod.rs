@@ -3,6 +3,7 @@ use crate::prelude::*;
 use self::{automata::CellularAutomataArchitect, empty::EmptyArchitect, rooms::RoomsArchitect};
 
 mod automata;
+mod drunkard;
 mod empty;
 mod rooms;
 
@@ -123,5 +124,32 @@ impl MapBuilder {
                 self.apply_horizontal_tunnel(prev.x, new.x, new.y);
             }
         }
+    }
+
+    fn spawn_monsters(&self, start: &Point, rng: &mut RandomNumberGenerator) -> Vec<Point> {
+        const NUM_MONSTERS: usize = 50;
+        const MIN_SPAWN_DISTANCE: f32 = 10.0;
+        let mut spawnable_tiles: Vec<Point> = self
+            .map
+            .tiles
+            .iter()
+            .enumerate()
+            .filter(|(idx, tile)| {
+                **tile == TileType::Floor
+                    && DistanceAlg::Pythagoras.distance2d(*start, self.map.index_to_point2d(*idx))
+                        > MIN_SPAWN_DISTANCE
+            })
+            .map(|(idx, _)| self.map.index_to_point2d(idx))
+            .collect();
+
+        let mut spawns = Vec::new();
+
+        for _ in 0..NUM_MONSTERS {
+            let target_index = rng.random_slice_index(&spawnable_tiles).unwrap();
+            spawns.push(spawnable_tiles[target_index]);
+            spawnable_tiles.remove(target_index);
+        }
+
+        spawns
     }
 }
