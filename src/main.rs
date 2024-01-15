@@ -92,11 +92,9 @@ impl State {
         spawn_amulet_of_yala(&mut ecs, map_builder.amulet_start);
 
         map_builder
-            .rooms
+            .monster_spawns
             .iter()
-            .skip(1)
-            .map(|r| r.center())
-            .for_each(|pos| spawn_monster(&mut ecs, &mut rng, pos));
+            .for_each(|pos| spawn_monster(&mut ecs, &mut rng, *pos));
 
         self.ecs = ecs;
         self.resources = resources;

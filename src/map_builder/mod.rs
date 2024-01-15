@@ -1,5 +1,7 @@
 use crate::prelude::*;
 
+use self::empty::EmptyArchitect;
+
 mod empty;
 
 const NUM_ROOMS: usize = 20;
@@ -28,14 +30,8 @@ impl MapBuilder {
     }
 
     pub fn build(mut self, rng: &mut RandomNumberGenerator) -> Self {
-        self.fill(TileType::Wall);
-        self.build_random_rooms(rng);
-        self.build_corridors(rng);
-        self.player_start = self.rooms[0].center();
-
-        self.amulet_start = self.find_most_distant();
-
-        self
+        let mut architect = EmptyArchitect {};
+        architect.build(rng)
     }
 
     fn fill(&mut self, tile: TileType) {
@@ -46,7 +42,7 @@ impl MapBuilder {
         let flow_map = DijkstraMap::new(
             SCREEN_WIDTH,
             SCREEN_HEIGHT,
-            &vec![self.map.point2d_to_index(self.player_start)],
+            &[self.map.point2d_to_index(self.player_start)],
             &self.map,
             MAX_FLOWMAP_DISTANCE,
         );
