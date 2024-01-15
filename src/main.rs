@@ -30,6 +30,10 @@ mod prelude {
     pub use crate::spawner::*;
     pub use crate::systems::*;
     pub use crate::turn_state::*;
+
+    pub fn times(n: usize) -> impl Iterator {
+        std::iter::repeat(()).take(n)
+    }
 }
 
 use prelude::*;

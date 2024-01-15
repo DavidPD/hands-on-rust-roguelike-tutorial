@@ -1,7 +1,8 @@
 use crate::prelude::*;
 
-use self::{empty::EmptyArchitect, rooms::RoomsArchitect};
+use self::{automata::CellularAutomataArchitect, empty::EmptyArchitect, rooms::RoomsArchitect};
 
+mod automata;
 mod empty;
 mod rooms;
 
@@ -31,7 +32,7 @@ impl MapBuilder {
     }
 
     pub fn build(mut self, rng: &mut RandomNumberGenerator) -> Self {
-        let mut architect = RoomsArchitect {};
+        let mut architect = CellularAutomataArchitect {};
         architect.build(rng)
     }
 

@@ -50,6 +50,14 @@ impl Map {
             None
         }
     }
+
+    pub fn directions() -> Vec<Point> {
+        let left: Point = Point::new(-1, 0);
+        let right: Point = Point::new(1, 0);
+        let up: Point = Point::new(0, -1);
+        let down: Point = Point::new(0, 1);
+        vec![up, down, left, right]
+    }
 }
 
 impl BaseMap for Map {
@@ -57,7 +65,7 @@ impl BaseMap for Map {
         let mut exits = SmallVec::new();
         let location = self.index_to_point2d(idx);
 
-        for direction in directions() {
+        for direction in Map::directions() {
             if let Some(idx) = self.valid_exit(location, direction) {
                 exits.push((idx, 1.0));
             }
@@ -83,12 +91,4 @@ impl Algorithm2D for Map {
     fn in_bounds(&self, pos: Point) -> bool {
         self.in_bounds(pos)
     }
-}
-
-fn directions() -> Vec<Point> {
-    let left: Point = Point::new(-1, 0);
-    let right: Point = Point::new(1, 0);
-    let up: Point = Point::new(0, -1);
-    let down: Point = Point::new(0, 1);
-    vec![up, down, left, right]
 }
