@@ -6,6 +6,15 @@ pub const NUM_TILES: usize = (SCREEN_WIDTH * SCREEN_HEIGHT) as usize;
 pub enum TileType {
     Wall,
     Floor,
+    Exit,
+}
+
+fn is_enterable_tile(tile: TileType) -> bool {
+    match tile {
+        TileType::Wall => false,
+        TileType::Floor => true,
+        TileType::Exit => true,
+    }
 }
 
 pub fn map_idx(x: i32, y: i32) -> usize {
@@ -30,7 +39,7 @@ impl Map {
     }
 
     pub fn can_enter_tile(&self, point: Point) -> bool {
-        self.in_bounds(point) && self.tiles[map_idx(point.x, point.y)] == TileType::Floor
+        self.in_bounds(point) && is_enterable_tile(self.tiles[map_idx(point.x, point.y)])
     }
 
     pub fn try_idx(&self, point: Point) -> Option<usize> {
