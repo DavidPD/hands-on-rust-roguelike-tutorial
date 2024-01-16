@@ -36,7 +36,7 @@ pub fn player_input(
                     .filter(|(_entity, _item, &item_pos)| item_pos == player_pos)
                 {
                     commands.remove_component::<Point>(entity);
-                    commands.add_component(entity, Carried(player))
+                    commands.add_component(entity, Carried(player));
                 }
 
                 Point::zero()
