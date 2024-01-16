@@ -31,7 +31,7 @@ pub fn player_input(
 
                 let mut items = <(Entity, &Item, &Point)>::query();
 
-                for (&entity, &item, &pos) in items
+                for (&entity, &_item, &_pos) in items
                     .iter(ecs)
                     .filter(|(_entity, _item, &item_pos)| item_pos == player_pos)
                 {

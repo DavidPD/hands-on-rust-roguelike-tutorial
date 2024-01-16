@@ -3,7 +3,6 @@ use crate::prelude::*;
 use self::{
     automata::CellularAutomataArchitect,
     drunkard::DrunkardsWalkArchitect,
-    empty::EmptyArchitect,
     prefab::apply_prefab,
     rooms::RoomsArchitect,
     themes::{DungeonTheme, ForestTheme},
@@ -47,7 +46,7 @@ impl MapBuilder {
         }
     }
 
-    pub fn build(mut self, rng: &mut RandomNumberGenerator) -> Self {
+    pub fn build(self, rng: &mut RandomNumberGenerator) -> Self {
         let mut architect: Box<dyn MapArchitect> = match rng.range(0, 3) {
             0 => Box::new(DrunkardsWalkArchitect {}),
             1 => Box::new(RoomsArchitect {}),
