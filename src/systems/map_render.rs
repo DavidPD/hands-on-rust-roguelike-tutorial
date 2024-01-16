@@ -1,5 +1,6 @@
 pub use crate::prelude::*;
 
+#[allow(clippy::borrowed_box)] // TODO: Try this in the newer version of Legion, then submit a bug.
 #[system]
 #[read_component(Player)]
 #[read_component(FieldOfView)]

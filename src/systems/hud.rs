@@ -32,7 +32,8 @@ pub fn hud(ecs: &SubWorld) {
 
     let player = <(Entity, &Player)>::query()
         .iter(ecs)
-        .find_map(|(&entity, _)| Some(entity))
+        .map(|(&entity, _)| entity)
+        .next()
         .unwrap();
 
     let mut item_query = <(&Item, &Name, &Carried)>::query();
