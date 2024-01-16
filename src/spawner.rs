@@ -2,7 +2,7 @@ pub use crate::prelude::*;
 
 pub fn spawn_player(ecs: &mut World, pos: Point) {
     ecs.push((
-        Player,
+        Player::new(),
         pos,
         Render {
             color: ColorPair::new(WHITE, BLACK),

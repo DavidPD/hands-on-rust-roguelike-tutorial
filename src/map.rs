@@ -67,6 +67,10 @@ impl Map {
         let down: Point = Point::new(0, 1);
         vec![up, down, left, right]
     }
+
+    pub fn try_tile(&self, pos: Point) -> Option<TileType> {
+        Some(self.tiles[self.try_idx(pos)?])
+    }
 }
 
 impl BaseMap for Map {
