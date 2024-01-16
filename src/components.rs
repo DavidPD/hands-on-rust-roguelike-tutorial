@@ -50,6 +50,7 @@ pub struct WantsToAttack {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct ChasingPlayer;
 
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Item;
 pub struct AmuletOfYala;
 
@@ -77,3 +78,14 @@ impl FieldOfView {
         }
     }
 }
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Carried(pub Entity);
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct ProvidesHealing {
+    pub amount: i32,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct ProvidesDungeonMap;

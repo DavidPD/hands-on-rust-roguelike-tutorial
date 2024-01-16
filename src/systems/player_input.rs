@@ -7,6 +7,8 @@ pub use crate::prelude::*;
 #[read_component(Player)]
 #[read_component(Enemy)]
 #[write_component(Health)]
+#[read_component(Item)]
+#[read_component(Carried)]
 pub fn player_input(
     ecs: &mut SubWorld,
     #[resource] key: &Option<VirtualKeyCode>,
@@ -14,15 +16,33 @@ pub fn player_input(
     commands: &mut CommandBuffer,
 ) {
     if let Some(key) = key {
+        let mut players = <(Entity, &Point)>::query().filter(component::<Player>());
+
         let delta = match key {
             VirtualKeyCode::Up => Point::new(0, -1),
             VirtualKeyCode::Down => Point::new(0, 1),
             VirtualKeyCode::Left => Point::new(-1, 0),
             VirtualKeyCode::Right => Point::new(1, 0),
+            VirtualKeyCode::G => {
+                let (player, player_pos) = players
+                    .iter(ecs)
+                    .find_map(|(&entity, &pos)| Some((entity, pos)))
+                    .unwrap();
+
+                let mut items = <(Entity, &Item, &Point)>::query();
+
+                for (&entity, &item, &pos) in items
+                    .iter(ecs)
+                    .filter(|(_entity, _item, &item_pos)| item_pos == player_pos)
+                {
+                    commands.remove_component::<Point>(entity);
+                    commands.add_component(entity, Carried(player))
+                }
+
+                Point::zero()
+            }
             _ => Point::new(0, 0),
         };
-
-        let mut players = <(Entity, &Point)>::query().filter(component::<Player>());
 
         let (player_entity, destination) = players
             .iter(ecs)
