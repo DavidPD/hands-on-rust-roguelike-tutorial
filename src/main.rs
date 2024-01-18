@@ -92,7 +92,13 @@ impl State {
         spawn_player(&mut ecs, map_builder.player_start);
         // spawn_amulet_of_yala(&mut ecs, map_builder.amulet_start);
 
-        State::spawn_level(&mut ecs, &mut rng, 0, &map_builder.monster_spawns);
+        State::spawn_level(
+            &mut ecs,
+            &mut self.resources,
+            &mut rng,
+            0,
+            &map_builder.monster_spawns,
+        );
 
         resources.insert(map_builder.map);
         resources.insert(Camera::new(map_builder.player_start));
@@ -105,12 +111,13 @@ impl State {
 
     pub fn spawn_level(
         ecs: &mut World,
+        resources: &mut Resources,
         rng: &mut RandomNumberGenerator,
         level: usize,
         spawn_points: &[Point],
     ) {
         let template = Templates::load();
-        template.spawn_entities(ecs, rng, level, spawn_points);
+        template.spawn_entities(ecs, resources, rng, level, spawn_points);
     }
 
     fn game_over(&mut self, ctx: &mut BTerm) {
@@ -188,7 +195,7 @@ impl State {
                 cb.remove(*e);
             }
         }
-        cb.flush(&mut self.ecs);
+        cb.flush(&mut self.ecs, &mut self.resources);
 
         <&mut FieldOfView>::query()
             .iter_mut(&mut self.ecs)
@@ -214,6 +221,7 @@ impl State {
 
         State::spawn_level(
             &mut self.ecs,
+            &mut self.resources,
             &mut rng,
             map_level,
             &map_builder.monster_spawns,

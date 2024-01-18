@@ -36,6 +36,7 @@ impl Templates {
     pub fn spawn_entities(
         &self,
         ecs: &mut World,
+        resources: &mut Resources,
         rng: &mut RandomNumberGenerator,
         level: usize,
         spawn_points: &[Point],
@@ -53,7 +54,7 @@ impl Templates {
                 self.spawn_entity(spawn, entity, &mut commands);
             }
         }
-        commands.flush(ecs);
+        commands.flush(ecs, resources);
     }
 
     fn spawn_entity(&self, spawn: Point, template: &Template, commands: &mut CommandBuffer) {
