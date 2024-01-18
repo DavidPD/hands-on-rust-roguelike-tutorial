@@ -181,7 +181,7 @@ impl State {
             entities_to_keep.insert(item);
         }
 
-        let mut cb = CommandBuffer::new(&mut self.ecs);
+        let mut cb = CommandBuffer::new(&self.ecs);
 
         for e in Entity::query().iter(&self.ecs) {
             if !entities_to_keep.contains(e) {

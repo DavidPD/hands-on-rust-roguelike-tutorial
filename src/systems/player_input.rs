@@ -50,9 +50,10 @@ pub fn player_input(
 
                     if let Ok(e) = ecs.entry_ref(entity) {
                         if e.get_component::<Weapon>().is_ok() {
-                            for (entity, _carried, _weapon) in <(Entity, &Carried, &Weapon)>::query()
-                                .iter(ecs)
-                                .filter(|(_, c, _)| c.0 == player)
+                            for (entity, _carried, _weapon) in
+                                <(Entity, &Carried, &Weapon)>::query()
+                                    .iter(ecs)
+                                    .filter(|(_, c, _)| c.0 == player)
                             {
                                 commands.remove(*entity);
                             }
@@ -116,7 +117,8 @@ pub fn player_input(
             .filter(|(_, _, carried)| carried.0 == player_entity)
             .enumerate()
             .filter(|(item_count, _)| *item_count == n) // This seems super fragile, but it's consistent with the display I guess
-            .find_map(|(_, (&entity, _, _))| Some(entity));
+            .map(|(_, (&entity, _, _))| entity)
+            .next();
 
         if let Some(item_entity) = item_entity {
             println!("Pushing Command");
