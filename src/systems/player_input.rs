@@ -8,6 +8,7 @@ pub use crate::prelude::*;
 #[read_component(Enemy)]
 #[read_component(Item)]
 #[read_component(Carried)]
+#[read_component(Weapon)]
 pub fn player_input(
     ecs: &mut SubWorld,
     #[resource] key: &Option<VirtualKeyCode>,
@@ -46,6 +47,17 @@ pub fn player_input(
                 {
                     commands.remove_component::<Point>(entity);
                     commands.add_component(entity, Carried(player));
+
+                    if let Ok(e) = ecs.entry_ref(entity) {
+                        if e.get_component::<Weapon>().is_ok() {
+                            for (entity, carried, weapon) in <(Entity, &Carried, &Weapon)>::query()
+                                .iter(ecs)
+                                .filter(|(_, c, _)| c.0 == player)
+                            {
+                                commands.remove(*entity);
+                            }
+                        }
+                    }
                 }
 
                 Point::zero()
@@ -61,7 +73,6 @@ pub fn player_input(
 
         let mut enemies = <(Entity, &Point)>::query().filter(component::<Enemy>());
 
-        let mut did_something = false;
         if delta != Point::zero() {
             let mut hit_something = false;
             enemies
@@ -69,7 +80,6 @@ pub fn player_input(
                 .filter(|(_, pos)| **pos == destination)
                 .for_each(|(entity, _)| {
                     hit_something = true;
-                    did_something = true;
                     commands.push((
                         (),
                         WantsToAttack {
@@ -80,7 +90,6 @@ pub fn player_input(
                 });
 
             if !hit_something {
-                did_something = true;
                 commands.push((
                     (),
                     WantsToMove {
