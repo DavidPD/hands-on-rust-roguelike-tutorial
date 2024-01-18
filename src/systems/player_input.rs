@@ -7,9 +7,13 @@ pub use crate::prelude::*;
 #[read_component(Item)]
 #[read_component(Carried)]
 #[read_component(Weapon)]
+#[allow(clippy::too_many_arguments)] // Allowing for queries, this function will only be called by automation.
 pub fn player_input(
     ecs: &mut SubWorld,
     players: &mut Query<(Entity, &Point, &Player)>,
+    items_on_ground: &mut Query<(Entity, &Item, &Point)>,
+    weapons: &mut Query<(Entity, &Carried, &Weapon)>,
+    enemies: &mut Query<(Entity, &Point, &Enemy)>,
     #[resource] key: &Option<VirtualKeyCode>,
     #[resource] turn_state: &mut TurnState,
     commands: &mut CommandBuffer,
@@ -36,9 +40,7 @@ pub fn player_input(
                     .next()
                     .unwrap();
 
-                let mut items = <(Entity, &Item, &Point)>::query();
-
-                for (&entity, &_item, &_pos) in items
+                for (&entity, &_item, &_pos) in items_on_ground
                     .iter(ecs)
                     .filter(|(_entity, _item, &item_pos)| item_pos == player_pos)
                 {
@@ -48,9 +50,7 @@ pub fn player_input(
                     if let Ok(e) = ecs.entry_ref(entity) {
                         if e.get_component::<Weapon>().is_ok() {
                             for (entity, _carried, _weapon) in
-                                <(Entity, &Carried, &Weapon)>::query()
-                                    .iter(ecs)
-                                    .filter(|(_, c, _)| c.0 == player)
+                                weapons.iter(ecs).filter(|(_, c, _)| c.0 == player)
                             {
                                 commands.remove(*entity);
                             }
@@ -69,14 +69,12 @@ pub fn player_input(
             .next()
             .unwrap();
 
-        let mut enemies = <(Entity, &Point)>::query().filter(component::<Enemy>());
-
         if delta != Point::zero() {
             let mut hit_something = false;
             enemies
                 .iter(ecs)
-                .filter(|(_, pos)| **pos == destination)
-                .for_each(|(entity, _)| {
+                .filter(|(_, pos, _)| **pos == destination)
+                .for_each(|(entity, _, _)| {
                     hit_something = true;
                     commands.push((
                         (),
