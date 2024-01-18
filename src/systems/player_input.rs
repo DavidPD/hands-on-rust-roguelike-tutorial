@@ -3,21 +3,18 @@ use legion::world::SubWorld;
 pub use crate::prelude::*;
 
 #[system]
-#[read_component(Point)]
-#[read_component(Player)]
 #[read_component(Enemy)]
 #[read_component(Item)]
 #[read_component(Carried)]
 #[read_component(Weapon)]
 pub fn player_input(
     ecs: &mut SubWorld,
+    players: &mut Query<(Entity, &Point, &Player)>,
     #[resource] key: &Option<VirtualKeyCode>,
     #[resource] turn_state: &mut TurnState,
     commands: &mut CommandBuffer,
 ) {
     if let Some(key) = key {
-        let mut players = <(Entity, &Point)>::query().filter(component::<Player>());
-
         let delta = match key {
             VirtualKeyCode::Up => Point::new(0, -1),
             VirtualKeyCode::Down => Point::new(0, 1),
@@ -35,7 +32,7 @@ pub fn player_input(
             VirtualKeyCode::G => {
                 let (player, player_pos) = players
                     .iter(ecs)
-                    .map(|(&entity, &pos)| (entity, pos))
+                    .map(|(&entity, &pos, _player)| (entity, pos))
                     .next()
                     .unwrap();
 
@@ -68,7 +65,7 @@ pub fn player_input(
 
         let (player_entity, destination) = players
             .iter(ecs)
-            .map(|(entity, pos)| (*entity, *pos + delta))
+            .map(|(entity, pos, _player)| (*entity, *pos + delta))
             .next()
             .unwrap();
 
