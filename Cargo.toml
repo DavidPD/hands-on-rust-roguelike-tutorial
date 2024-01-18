@@ -11,4 +11,4 @@ bracket-lib = "~0.8.1"
 legion = "=0.4.0"
 dry-mods = "0.1.5"
 serde = { version = "=1.0.115" }
-ron = "=0.6.1"
+ron = "=0.8.1"
