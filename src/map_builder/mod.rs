@@ -8,10 +8,10 @@ use self::{
     themes::{DungeonTheme, ForestTheme},
 };
 
-mod automata;
-mod drunkard;
-mod empty;
-mod prefab;
+pub mod automata;
+pub mod drunkard;
+pub mod empty;
+pub mod prefab;
 mod rooms;
 mod themes;
 

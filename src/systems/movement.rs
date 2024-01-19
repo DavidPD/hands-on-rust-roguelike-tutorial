@@ -30,3 +30,56 @@ pub fn movement(
         commands.remove(*entity);
     }
 }
+
+#[cfg(test)]
+mod test {
+    use empty::EmptyArchitect;
+
+    use super::*;
+    // use crate::prelude::*;
+
+    fn init_test() -> (World, Resources, Map, Camera, CommandBuffer) {
+        let world = World::default();
+        let resources = Resources::default();
+        let map = Map::new();
+        EmptyArchitect {}.build(&mut RandomNumberGenerator::new());
+        let camera = Camera::new(Point::zero());
+        let mut command_buffer = CommandBuffer::new(&world);
+
+        (world, resources, map, camera, command_buffer)
+    }
+
+    #[test]
+    fn test_movement() {
+        let (mut world, mut resources, mut map, mut camera, mut cb) = init_test();
+        let player = spawn_player(&mut world, Point::zero());
+        let wants_to_move_component = WantsToMove {
+            entity: player,
+            destination: Point::new(0, 1),
+        };
+        let wants_to_move = world.push(((), wants_to_move_component));
+
+        cb.flush(&mut world, &mut resources);
+        let mut subworld = unsafe { SubWorld::new_unchecked(&world, ComponentAccess::All, None) };
+
+        movement(
+            &wants_to_move,
+            &wants_to_move_component,
+            &mut map,
+            &mut camera,
+            &mut subworld,
+            &mut cb,
+        );
+
+        cb.flush(&mut world, &mut resources);
+
+        assert_eq!(
+            world
+                .entry(player)
+                .unwrap()
+                .get_component::<Point>()
+                .unwrap(),
+            &Point::new(0, 1)
+        )
+    }
+}
