@@ -2,6 +2,8 @@ use crate::prelude::*;
 
 #[system(for_each)]
 // Components still have to be declared here because they're not referenced from a query. :(
+// Furthermore they can't be included as optional components because they're not on `entity`
+// Ask me how I know 😅
 #[read_component(Player)]
 #[read_component(FieldOfView)]
 pub fn movement(
