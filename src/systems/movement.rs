@@ -34,6 +34,8 @@ pub fn movement(
 
 #[cfg(test)]
 mod test {
+    use std::borrow::*;
+
     use super::*;
     use empty::EmptyArchitect;
 
@@ -50,7 +52,7 @@ mod test {
     fn test_blocked() {
         let destination = Point::new(0, 1);
         let mut state = MovementSystemTest::new().setup();
-        state.map.tiles[map_idx(0, 1)] = TileType::Wall;
+        state.resources.get_mut::<Map>().unwrap().tiles[map_idx(0, 1)] = TileType::Wall;
         state.step(state.player, destination);
 
         assert_eq!(state.player_pos(), Point::zero());
@@ -117,17 +119,27 @@ mod test {
             .visible_tiles
             .insert(Point::zero());
 
-        assert_eq!(state.map.revealed_tiles.iter().filter(|&&t| t).count(), 0);
+        let num_tiles = |state: &MovementSystemTest| {
+            state
+                .resources
+                .get::<Map>()
+                .unwrap()
+                .revealed_tiles
+                .iter()
+                .filter(|&&t| t)
+                .count()
+        };
+
+        assert_eq!(num_tiles(&state), 0);
 
         state.step(state.player, destination);
 
-        assert_eq!(state.map.revealed_tiles.iter().filter(|&&t| t).count(), 1);
+        assert_eq!(num_tiles(&state), 1);
     }
 
     struct MovementSystemTest {
         world: World,
         resources: Resources,
-        map: Map,
         camera: Camera,
         cb: CommandBuffer,
         player: Entity,
@@ -136,16 +148,17 @@ mod test {
     impl MovementSystemTest {
         fn new() -> Self {
             let mut world = World::default();
-            let resources = Resources::default();
+            let mut resources = Resources::default();
             let map_builder = EmptyArchitect {}.build(&mut RandomNumberGenerator::new());
             let camera = Camera::new(Point::zero());
             let cb = CommandBuffer::new(&world);
             let player = spawn_player(&mut world, Point::zero());
 
+            resources.insert(map_builder.map);
+
             Self {
                 world,
                 resources,
-                map: map_builder.map,
                 camera,
                 cb,
                 player,
@@ -173,7 +186,7 @@ mod test {
             movement(
                 &wants_to_move,
                 &wants_to_move_component,
-                &mut self.map,
+                self.resources.get_mut::<Map>().unwrap().borrow_mut(),
                 &mut self.camera,
                 &mut subworld,
                 &mut self.cb,
