@@ -38,7 +38,38 @@ mod test {
     use super::*;
     // use crate::prelude::*;
 
-    struct MovementTest {
+    #[test]
+    fn test_movement() {
+        let destination = Point::new(0, 1);
+        let mut state = MovementSystemTest::new().setup();
+        state.step(destination);
+
+        assert_eq!(state.player_pos(), destination);
+    }
+
+    #[test]
+    fn test_blocked() {
+        let destination = Point::new(0, 1);
+        let mut state = MovementSystemTest::new().setup();
+        state.map.tiles[map_idx(0, 1)] = TileType::Wall;
+        state.step(destination);
+
+        assert_eq!(state.player_pos(), Point::zero());
+    }
+
+    #[test]
+    fn test_fov() {
+        let destination = Point::new(0, 1);
+        let mut state = MovementSystemTest::new().setup();
+
+        assert!(!state.player_fov().is_dirty);
+
+        state.step(destination);
+
+        assert!(state.player_fov().is_dirty);
+    }
+
+    struct MovementSystemTest {
         world: World,
         resources: Resources,
         map: Map,
@@ -47,7 +78,7 @@ mod test {
         player: Entity,
     }
 
-    impl MovementTest {
+    impl MovementSystemTest {
         fn new() -> Self {
             let mut world = World::default();
             let resources = Resources::default();
@@ -68,7 +99,8 @@ mod test {
         }
 
         fn setup(mut self) -> Self {
-            spawn_player(&mut self.world, Point::zero());
+            let mut player = self.world.entry_mut(self.player).unwrap();
+            player.get_component_mut::<FieldOfView>().unwrap().is_dirty = false;
 
             self
         }
@@ -92,6 +124,8 @@ mod test {
                 &mut subworld,
                 &mut self.cb,
             );
+
+            self.cb.flush(&mut self.world, &mut self.resources);
         }
 
         fn player_pos(&mut self) -> Point {
@@ -102,24 +136,14 @@ mod test {
                 .get_component::<Point>()
                 .unwrap()
         }
-    }
 
-    #[test]
-    fn test_movement() {
-        let destination = Point::new(0, 1);
-        let mut state = MovementTest::new().setup();
-        state.step(destination);
-
-        assert_eq!(state.player_pos(), destination);
-    }
-
-    #[test]
-    fn test_blocked() {
-        let destination = Point::new(0, 1);
-        let mut state = MovementTest::new().setup();
-        state.map.tiles[map_idx(0, 1)] = TileType::Wall;
-        state.step(destination);
-
-        assert_eq!(state.player_pos(), Point::zero());
+        fn player_fov(&mut self) -> FieldOfView {
+            self.world
+                .entry(self.player)
+                .unwrap()
+                .get_component::<FieldOfView>()
+                .unwrap()
+                .clone()
+        }
     }
 }
