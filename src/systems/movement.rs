@@ -75,11 +75,14 @@ mod test {
         let destination = Point::new(0, 1);
         let mut state = MovementSystemTest::new().setup();
 
-        let camera_start_top_y = state.camera.top_y;
+        let camera_start_top_y = state.resources.get::<Camera>().unwrap().top_y;
 
         state.step(state.player, destination);
 
-        assert_ne!(state.camera.top_y, camera_start_top_y);
+        assert_ne!(
+            state.resources.get::<Camera>().unwrap().top_y,
+            camera_start_top_y
+        );
     }
 
     #[test]
@@ -87,7 +90,7 @@ mod test {
         let destination = Point::new(0, 1);
         let mut state = MovementSystemTest::new().setup();
 
-        let camera_start_top_y = state.camera.top_y;
+        let camera_start_top_y = state.resources.get::<Camera>().unwrap().top_y;
 
         let enemy = state
             .world
@@ -95,7 +98,10 @@ mod test {
 
         state.step(enemy, destination);
 
-        assert_eq!(state.camera.top_y, camera_start_top_y);
+        assert_eq!(
+            state.resources.get::<Camera>().unwrap().top_y,
+            camera_start_top_y
+        );
         assert_eq!(
             state
                 .world
@@ -140,7 +146,6 @@ mod test {
     struct MovementSystemTest {
         world: World,
         resources: Resources,
-        camera: Camera,
         cb: CommandBuffer,
         player: Entity,
     }
@@ -155,11 +160,11 @@ mod test {
             let player = spawn_player(&mut world, Point::zero());
 
             resources.insert(map_builder.map);
+            resources.insert(camera);
 
             Self {
                 world,
                 resources,
-                camera,
                 cb,
                 player,
             }
@@ -187,7 +192,7 @@ mod test {
                 &wants_to_move,
                 &wants_to_move_component,
                 self.resources.get_mut::<Map>().unwrap().borrow_mut(),
-                &mut self.camera,
+                self.resources.get_mut::<Camera>().unwrap().borrow_mut(),
                 &mut subworld,
                 &mut self.cb,
             );
