@@ -10,7 +10,7 @@ pub struct Render {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Player {
-    pub map_level: i32,
+    pub map_level: usize,
 }
 
 impl Player {

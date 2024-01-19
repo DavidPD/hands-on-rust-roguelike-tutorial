@@ -30,9 +30,9 @@ pub fn hud(ecs: &SubWorld) {
         ColorPair::new(RED, BLACK),
     );
 
-    let player = <(Entity, &Player)>::query()
+    let (player, map_level) = <(Entity, &Player)>::query()
         .iter(ecs)
-        .map(|(&entity, _)| entity)
+        .map(|(&entity, player)| (entity, player.map_level))
         .next()
         .unwrap();
 
@@ -54,6 +54,12 @@ pub fn hud(ecs: &SubWorld) {
             ColorPair::new(YELLOW, BLACK),
         );
     }
+
+    draw_batch.print_color_right(
+        Point::new(SCREEN_WIDTH * 2, 1),
+        format!("Dungeon Level {}", map_level),
+        ColorPair::new(YELLOW, BLACK),
+    );
 
     draw_batch.submit(10000).expect("HUD draw batch error");
 }
