@@ -40,7 +40,7 @@ mod test {
     fn test_movement() {
         let destination = Point::new(0, 1);
         let mut state = MovementSystemTest::new().setup();
-        state.step(destination);
+        state.step(state.player, destination);
 
         assert_eq!(state.player_pos(), destination);
     }
@@ -50,7 +50,7 @@ mod test {
         let destination = Point::new(0, 1);
         let mut state = MovementSystemTest::new().setup();
         state.map.tiles[map_idx(0, 1)] = TileType::Wall;
-        state.step(destination);
+        state.step(state.player, destination);
 
         assert_eq!(state.player_pos(), Point::zero());
     }
@@ -62,9 +62,65 @@ mod test {
 
         assert!(!state.player_fov().is_dirty);
 
-        state.step(destination);
+        state.step(state.player, destination);
 
         assert!(state.player_fov().is_dirty);
+    }
+
+    #[test]
+    fn test_camera_moves_for_player() {
+        let destination = Point::new(0, 1);
+        let mut state = MovementSystemTest::new().setup();
+
+        let camera_start_top_y = state.camera.top_y;
+
+        state.step(state.player, destination);
+
+        assert_ne!(state.camera.top_y, camera_start_top_y);
+    }
+
+    #[test]
+    fn test_camera_still_for_enemy() {
+        let destination = Point::new(0, 1);
+        let mut state = MovementSystemTest::new().setup();
+
+        let camera_start_top_y = state.camera.top_y;
+
+        let enemy = state
+            .world
+            .push((Enemy, FieldOfView::new(6), Point::zero()));
+
+        state.step(enemy, destination);
+
+        assert_eq!(state.camera.top_y, camera_start_top_y);
+        assert_eq!(
+            state
+                .world
+                .entry(enemy)
+                .unwrap()
+                .get_component::<Point>()
+                .unwrap(),
+            &destination
+        ); // just to be sure the enemy moves
+    }
+
+    #[test]
+    fn test_revealed_tiles() {
+        let destination = Point::new(0, 1);
+        let mut state = MovementSystemTest::new().setup();
+
+        let mut player = state.world.entry_mut(state.player).unwrap();
+        player
+            .get_component_mut::<FieldOfView>()
+            .unwrap()
+            .visible_tiles
+            .insert(Point::zero());
+
+        assert_eq!(state.map.revealed_tiles.iter().filter(|&&t| t).count(), 0);
+
+        state.step(state.player, destination);
+
+        assert_eq!(state.map.revealed_tiles.iter().filter(|&&t| t).count(), 1);
     }
 
     struct MovementSystemTest {
@@ -80,8 +136,7 @@ mod test {
         fn new() -> Self {
             let mut world = World::default();
             let resources = Resources::default();
-            let map = Map::new();
-            EmptyArchitect {}.build(&mut RandomNumberGenerator::new());
+            let map_builder = EmptyArchitect {}.build(&mut RandomNumberGenerator::new());
             let camera = Camera::new(Point::zero());
             let cb = CommandBuffer::new(&world);
             let player = spawn_player(&mut world, Point::zero());
@@ -89,7 +144,7 @@ mod test {
             Self {
                 world,
                 resources,
-                map,
+                map: map_builder.map,
                 camera,
                 cb,
                 player,
@@ -103,9 +158,9 @@ mod test {
             self
         }
 
-        fn step(&mut self, move_to: Point) {
+        fn step(&mut self, entity: Entity, move_to: Point) {
             let wants_to_move_component = WantsToMove {
-                entity: self.player,
+                entity: entity,
                 destination: move_to,
             };
 
