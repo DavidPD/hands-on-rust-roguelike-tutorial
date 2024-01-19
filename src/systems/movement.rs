@@ -33,10 +33,8 @@ pub fn movement(
 
 #[cfg(test)]
 mod test {
-    use empty::EmptyArchitect;
-
     use super::*;
-    // use crate::prelude::*;
+    use empty::EmptyArchitect;
 
     #[test]
     fn test_movement() {
