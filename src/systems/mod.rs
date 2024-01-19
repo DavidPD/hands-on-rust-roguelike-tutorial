@@ -13,7 +13,6 @@ dry_mods::mods! {
     mod use chasing;
     mod use fov;
     mod use use_items;
-    mod use test_thing;
 }
 
 pub fn build_input_scheduler() -> Schedule {

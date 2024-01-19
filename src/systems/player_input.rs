@@ -50,7 +50,7 @@ pub fn player_input(
 
                     if let Ok(e) = ecs.entry_ref(entity) {
                         if e.get_component::<Weapon>().is_ok() {
-                            for (entity, carried, weapon) in <(Entity, &Carried, &Weapon)>::query()
+                            for (entity, _carried, _weapon) in <(Entity, &Carried, &Weapon)>::query()
                                 .iter(ecs)
                                 .filter(|(_, c, _)| c.0 == player)
                             {
