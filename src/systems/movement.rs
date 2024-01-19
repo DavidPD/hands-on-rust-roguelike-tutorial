@@ -38,87 +38,88 @@ mod test {
     use super::*;
     // use crate::prelude::*;
 
-    fn init_system_test() -> (World, Resources, Map, Camera, CommandBuffer) {
-        let world = World::default();
-        let resources = Resources::default();
-        let map = Map::new();
-        EmptyArchitect {}.build(&mut RandomNumberGenerator::new());
-        let camera = Camera::new(Point::zero());
-        let command_buffer = CommandBuffer::new(&world);
+    struct MovementTest {
+        world: World,
+        resources: Resources,
+        map: Map,
+        camera: Camera,
+        cb: CommandBuffer,
+        player: Entity,
+    }
 
-        (world, resources, map, camera, command_buffer)
+    impl MovementTest {
+        fn new() -> Self {
+            let mut world = World::default();
+            let resources = Resources::default();
+            let map = Map::new();
+            EmptyArchitect {}.build(&mut RandomNumberGenerator::new());
+            let camera = Camera::new(Point::zero());
+            let cb = CommandBuffer::new(&world);
+            let player = spawn_player(&mut world, Point::zero());
+
+            Self {
+                world,
+                resources,
+                map,
+                camera,
+                cb,
+                player,
+            }
+        }
+
+        fn setup(mut self) -> Self {
+            spawn_player(&mut self.world, Point::zero());
+
+            self
+        }
+
+        fn step(&mut self, move_to: Point) {
+            let wants_to_move_component = WantsToMove {
+                entity: self.player,
+                destination: move_to,
+            };
+
+            let wants_to_move = self.world.push(((), wants_to_move_component));
+            self.cb.flush(&mut self.world, &mut self.resources);
+            let mut subworld =
+                unsafe { SubWorld::new_unchecked(&self.world, ComponentAccess::All, None) };
+
+            movement(
+                &wants_to_move,
+                &wants_to_move_component,
+                &mut self.map,
+                &mut self.camera,
+                &mut subworld,
+                &mut self.cb,
+            );
+        }
+
+        fn player_pos(&mut self) -> Point {
+            *self
+                .world
+                .entry(self.player)
+                .unwrap()
+                .get_component::<Point>()
+                .unwrap()
+        }
     }
 
     #[test]
     fn test_movement() {
-        let (mut world, mut resources, mut map, mut camera, mut cb) = init_system_test();
-        let (player, wants_to_move_component, wants_to_move, mut subworld) =
-            setup(&mut world, &mut cb, &mut resources);
+        let destination = Point::new(0, 1);
+        let mut state = MovementTest::new().setup();
+        state.step(destination);
 
-        movement(
-            &wants_to_move,
-            &wants_to_move_component,
-            &mut map,
-            &mut camera,
-            &mut subworld,
-            &mut cb,
-        );
-
-        cb.flush(&mut world, &mut resources);
-
-        assert_eq!(
-            world
-                .entry(player)
-                .unwrap()
-                .get_component::<Point>()
-                .unwrap(),
-            &Point::new(0, 1)
-        )
+        assert_eq!(state.player_pos(), destination);
     }
 
     #[test]
     fn test_blocked() {
-        let (mut world, mut resources, mut map, mut camera, mut cb) = init_system_test();
-        let (player, wants_to_move_component, wants_to_move, mut subworld) =
-            setup(&mut world, &mut cb, &mut resources);
+        let destination = Point::new(0, 1);
+        let mut state = MovementTest::new().setup();
+        state.map.tiles[map_idx(0, 1)] = TileType::Wall;
+        state.step(destination);
 
-        map.tiles[map_idx(0, 1)] = TileType::Wall;
-
-        movement(
-            &wants_to_move,
-            &wants_to_move_component,
-            &mut map,
-            &mut camera,
-            &mut subworld,
-            &mut cb,
-        );
-
-        cb.flush(&mut world, &mut resources);
-
-        assert_eq!(
-            world
-                .entry(player)
-                .unwrap()
-                .get_component::<Point>()
-                .unwrap(),
-            &Point::new(0, 0)
-        )
-    }
-
-    fn setup<'a>(
-        world: &'a mut World,
-        cb: &mut CommandBuffer,
-        resources: &mut Resources,
-    ) -> (Entity, WantsToMove, Entity, SubWorld<'a>) {
-        let player = spawn_player(world, Point::zero());
-        let wants_to_move_component = WantsToMove {
-            entity: player,
-            destination: Point::new(0, 1),
-        };
-        let wants_to_move = world.push(((), wants_to_move_component));
-
-        cb.flush(world, resources);
-        let subworld = unsafe { SubWorld::new_unchecked(&*world, ComponentAccess::All, None) };
-        (player, wants_to_move_component, wants_to_move, subworld)
+        assert_eq!(state.player_pos(), Point::zero());
     }
 }
