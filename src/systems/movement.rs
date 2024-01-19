@@ -1,6 +1,7 @@
 use crate::prelude::*;
 
 #[system(for_each)]
+// Components still have to be declared here because they're not referenced from a query. :(
 #[read_component(Player)]
 #[read_component(FieldOfView)]
 pub fn movement(
