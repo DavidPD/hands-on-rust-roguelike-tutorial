@@ -34,8 +34,6 @@ pub fn movement(
 
 #[cfg(test)]
 mod test {
-    use std::borrow::*;
-
     use super::*;
     use empty::EmptyArchitect;
 
@@ -146,7 +144,6 @@ mod test {
     struct MovementSystemTest {
         world: World,
         resources: Resources,
-        cb: CommandBuffer,
         player: Entity,
     }
 
@@ -156,7 +153,6 @@ mod test {
             let mut resources = Resources::default();
             let map_builder = EmptyArchitect {}.build(&mut RandomNumberGenerator::new());
             let camera = Camera::new(Point::zero());
-            let cb = CommandBuffer::new(&world);
             let player = spawn_player(&mut world, Point::zero());
 
             resources.insert(map_builder.map);
@@ -165,7 +161,6 @@ mod test {
             Self {
                 world,
                 resources,
-                cb,
                 player,
             }
         }
@@ -179,25 +174,19 @@ mod test {
 
         fn step(&mut self, entity: Entity, move_to: Point) {
             let wants_to_move_component = WantsToMove {
-                entity: entity,
+                entity,
                 destination: move_to,
             };
 
-            let wants_to_move = self.world.push(((), wants_to_move_component));
-            self.cb.flush(&mut self.world, &mut self.resources);
-            let mut subworld =
-                unsafe { SubWorld::new_unchecked(&self.world, ComponentAccess::All, None) };
+            self.world.push(((), wants_to_move_component));
 
-            movement(
-                &wants_to_move,
-                &wants_to_move_component,
-                self.resources.get_mut::<Map>().unwrap().borrow_mut(),
-                self.resources.get_mut::<Camera>().unwrap().borrow_mut(),
-                &mut subworld,
-                &mut self.cb,
-            );
+            let mut system = movement_system();
+            system.run(&mut self.world, &mut self.resources);
 
-            self.cb.flush(&mut self.world, &mut self.resources);
+            system
+                .command_buffer_mut(self.world.id())
+                .unwrap()
+                .flush(&mut self.world, &mut self.resources);
         }
 
         fn player_pos(&mut self) -> Point {
