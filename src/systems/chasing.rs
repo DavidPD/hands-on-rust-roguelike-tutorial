@@ -68,3 +68,106 @@ pub fn chasing(ecs: &SubWorld, #[resource] map: &Map, commands: &mut CommandBuff
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use std::ops::DerefMut;
+
+    use self::empty::EmptyArchitect;
+
+    use super::*;
+
+    fn build_schedule() -> Schedule {
+        Schedule::builder().add_system(chasing_system()).build()
+    }
+
+    #[test]
+    fn test_chasing() {
+        let mut state = StateFixture::default().with_schedule(build_schedule());
+        let mut enemy_fov = FieldOfView::new(6);
+        enemy_fov.visible_tiles.insert(Point::zero());
+
+        let enemy = state
+            .world
+            .push((Enemy, ChasingPlayer, enemy_fov, Point::new(2, 0)));
+        let expected_destination = Point::new(1, 0);
+
+        state.step();
+
+        println!("{:?}", state.world);
+
+        let WantsToMove {
+            entity,
+            destination,
+        } = <&WantsToMove>::query()
+            .iter(&state.world)
+            .next()
+            .expect("Expected enemy to move");
+
+        assert_eq!(&enemy, entity);
+        assert_eq!(destination, &expected_destination);
+    }
+
+    struct StateFixture {
+        step_schedule: Schedule,
+        world: World,
+        resources: Resources,
+        player: Option<Entity>,
+    }
+
+    impl StateFixture {
+        pub fn new(schedule: Schedule) -> Self {
+            Self {
+                step_schedule: schedule,
+                world: World::default(),
+                resources: Resources::default(),
+                player: None,
+            }
+        }
+
+        pub fn with_player(mut self) -> Self {
+            self.player = Some(spawn_player(&mut self.world, Point::zero()));
+            self
+        }
+
+        pub fn with_map(mut self, map: Map) -> Self {
+            self.resources.insert(map);
+            self
+        }
+
+        pub fn with_camera(mut self, camera: Camera) -> Self {
+            self.resources.insert(camera);
+            self
+        }
+
+        pub fn with_schedule(mut self, schedule: Schedule) -> Self {
+            self.step_schedule = schedule;
+            self
+        }
+
+        pub fn step(&mut self) {
+            self.step_schedule
+                .execute(&mut self.world, &mut self.resources);
+        }
+
+        pub fn update<T, F>(&mut self, update: &mut F)
+        where
+            T: Resource,
+            F: Fn(&mut T),
+        {
+            update(self.resources.get_mut::<T>().unwrap().deref_mut());
+        }
+    }
+
+    impl Default for StateFixture {
+        fn default() -> Self {
+            let map_builder = EmptyArchitect {}.build(&mut RandomNumberGenerator::new());
+            let camera = Camera::new(Point::zero());
+
+            Self::new(Schedule::builder().build())
+                .with_map(map_builder.map)
+                .with_camera(camera)
+                .with_player()
+        }
+    }
+}
