@@ -3,7 +3,7 @@ use crate::prelude::*;
 use self::{
     automata::CellularAutomataArchitect,
     drunkard::DrunkardsWalkArchitect,
-    prefab::apply_prefab,
+    prefab::{apply_prefab, FORTRESS},
     rooms::RoomsArchitect,
     themes::{DungeonTheme, ForestTheme},
 };
@@ -54,7 +54,7 @@ impl MapBuilder {
         };
 
         let mut mb = architect.build(rng);
-        apply_prefab(&mut mb, rng);
+        apply_prefab(&mut mb, FORTRESS, rng);
 
         mb.theme = match rng.range(0, 2) {
             0 => Box::new(DungeonTheme {}),

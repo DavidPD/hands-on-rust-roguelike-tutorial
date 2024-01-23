@@ -1,7 +1,6 @@
 use crate::prelude::*;
 
-const FORTRESS: (&str, i32, i32) = (
-    "
+pub const FORTRESS: &str = "
 ------------
 ---######---
 ---#----#---
@@ -13,15 +12,12 @@ const FORTRESS: (&str, i32, i32) = (
 ---#----#---
 ---######---
 ------------
-",
-    12,
-    11,
-);
+";
 
 const MAX_ATTEMPTS: i32 = 10;
 const MIN_DISTANCE_FROM_PLAYER: f32 = 20.0;
 
-pub fn apply_prefab(mb: &mut MapBuilder, rng: &mut RandomNumberGenerator) {
+pub fn apply_prefab(mb: &mut MapBuilder, prefab: &str, rng: &mut RandomNumberGenerator) {
     let mut placement = None;
 
     let flow_map = DijkstraMap::new(
@@ -32,13 +28,15 @@ pub fn apply_prefab(mb: &mut MapBuilder, rng: &mut RandomNumberGenerator) {
         MAX_FLOWMAP_DISTANCE,
     );
 
+    let (width, height) = prefab_size(prefab);
+
     let mut attempts = 0;
     while placement.is_none() && attempts < MAX_ATTEMPTS {
         let dimensions = Rect::with_size(
-            rng.range(0, SCREEN_WIDTH - FORTRESS.1),
-            rng.range(0, SCREEN_HEIGHT - FORTRESS.2),
-            FORTRESS.1,
-            FORTRESS.2,
+            rng.range(0, SCREEN_WIDTH - width),
+            rng.range(0, SCREEN_HEIGHT - height),
+            width,
+            height,
         );
 
         let mut can_place = false;
@@ -63,28 +61,50 @@ pub fn apply_prefab(mb: &mut MapBuilder, rng: &mut RandomNumberGenerator) {
     }
 
     if let Some(placement) = placement {
-        let string_vec: Vec<char> = FORTRESS
-            .0
-            .chars()
-            .filter(|&c| c != '\n' && c != '\r')
-            .collect();
+        place_prefab(placement, mb, FORTRESS);
+    }
+}
 
-        let mut i = 0;
-        for ty in placement.y..placement.y + FORTRESS.2 {
-            for tx in placement.x..placement.x + FORTRESS.1 {
-                let idx = map_idx(tx, ty);
-                let c = string_vec[i];
-                match c {
-                    'M' => {
-                        mb.map.tiles[idx] = TileType::Floor;
-                        mb.monster_spawns.push(Point::new(tx, ty));
-                    }
-                    '-' => mb.map.tiles[idx] = TileType::Floor,
-                    '#' => mb.map.tiles[idx] = TileType::Wall,
-                    _ => panic!("Unsupported Prefab Tile \"{}\"", c),
+fn prefab_size(prefab: &str) -> (i32, i32) {
+    let filled_lines: Vec<&str> = prefab.lines().filter(|line| !line.is_empty()).collect();
+
+    let height: i32 = filled_lines
+        .len()
+        .try_into()
+        .expect("error calculating height");
+    let mut width: i32 = 0;
+    if let Some(first_line) = filled_lines.first() {
+        width = first_line
+            .chars()
+            .count()
+            .try_into()
+            .expect("error calculating width");
+    }
+
+    (width, height)
+}
+
+pub fn place_prefab(placement: Point, mb: &mut MapBuilder, prefab: &str) {
+    let (width, height) = prefab_size(prefab);
+
+    let string_vec: Vec<char> = prefab.chars().filter(|&c| c != '\n' && c != '\r').collect();
+
+    let mut i = 0;
+    for ty in placement.y..placement.y + height {
+        for tx in placement.x..placement.x + width {
+            let idx = map_idx(tx, ty);
+            let c = string_vec[i];
+            match c {
+                'M' => {
+                    mb.map.tiles[idx] = TileType::Floor;
+                    mb.monster_spawns.push(Point::new(tx, ty));
                 }
-                i += 1;
+                '-' => mb.map.tiles[idx] = TileType::Floor,
+                '#' => mb.map.tiles[idx] = TileType::Wall,
+                '@' => mb.player_start = Point::new(tx, ty),
+                _ => panic!("Unsupported Prefab Tile \"{}\"", c),
             }
+            i += 1;
         }
     }
 }
@@ -111,8 +131,15 @@ mod test {
 
         let mut mb = EmptyArchitect {}.build(&mut rng);
 
-        apply_prefab(&mut mb, &mut rng);
+        apply_prefab(&mut mb, FORTRESS, &mut rng);
 
         assert_eq!(count_walls(mb.map), 32)
+    }
+
+    #[test]
+    fn test_fortress_size() {
+        let (width, height) = prefab_size(FORTRESS);
+        assert_eq!(width, 12);
+        assert_eq!(height, 11);
     }
 }
