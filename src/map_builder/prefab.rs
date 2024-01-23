@@ -1,3 +1,5 @@
+use std::collections::btree_map::Range;
+
 use crate::prelude::*;
 
 pub const FORTRESS: &str = "
@@ -61,12 +63,15 @@ pub fn apply_prefab(mb: &mut MapBuilder, prefab: &str, rng: &mut RandomNumberGen
     }
 
     if let Some(placement) = placement {
-        place_prefab(placement, mb, FORTRESS);
+        place_prefab(placement, mb, prefab);
     }
 }
 
 fn prefab_size(prefab: &str) -> (i32, i32) {
-    let filled_lines: Vec<&str> = prefab.lines().filter(|line| !line.is_empty()).collect();
+    let filled_lines: Vec<&str> = prefab
+        .lines()
+        .filter(|line| !line.trim().is_empty())
+        .collect();
 
     let height: i32 = filled_lines
         .len()
@@ -75,6 +80,7 @@ fn prefab_size(prefab: &str) -> (i32, i32) {
     let mut width: i32 = 0;
     if let Some(first_line) = filled_lines.first() {
         width = first_line
+            .trim()
             .chars()
             .count()
             .try_into()
@@ -85,15 +91,10 @@ fn prefab_size(prefab: &str) -> (i32, i32) {
 }
 
 pub fn place_prefab(placement: Point, mb: &mut MapBuilder, prefab: &str) {
-    let (width, height) = prefab_size(prefab);
-
-    let string_vec: Vec<char> = prefab.chars().filter(|&c| c != '\n' && c != '\r').collect();
-
-    let mut i = 0;
-    for ty in placement.y..placement.y + height {
-        for tx in placement.x..placement.x + width {
-            let idx = map_idx(tx, ty);
-            let c = string_vec[i];
+    for (line, ty) in prefab.lines().zip(0..) {
+        let line = line.trim();
+        for (c, tx) in line.chars().zip(0..) {
+            let idx = map_idx(tx + placement.x, ty + placement.y);
             match c {
                 'M' => {
                     mb.map.tiles[idx] = TileType::Floor;
@@ -104,7 +105,6 @@ pub fn place_prefab(placement: Point, mb: &mut MapBuilder, prefab: &str) {
                 '@' => mb.player_start = Point::new(tx, ty),
                 _ => panic!("Unsupported Prefab Tile \"{}\"", c),
             }
-            i += 1;
         }
     }
 }
@@ -114,9 +114,6 @@ mod test {
     use crate::empty::EmptyArchitect;
 
     use super::*;
-    fn map_builder() -> MapBuilder {
-        MapBuilder::new()
-    }
 
     fn count_walls(map: Map) -> usize {
         map.tiles
@@ -134,6 +131,21 @@ mod test {
         apply_prefab(&mut mb, FORTRESS, &mut rng);
 
         assert_eq!(count_walls(mb.map), 32)
+    }
+
+    #[test]
+    fn test_place_square() {
+        let square = "
+        ##
+        ##
+        ";
+        let mut rng = RandomNumberGenerator::new();
+
+        let mut mb = EmptyArchitect {}.build(&mut rng);
+
+        apply_prefab(&mut mb, square, &mut rng);
+
+        assert_eq!(count_walls(mb.map), 4)
     }
 
     #[test]
