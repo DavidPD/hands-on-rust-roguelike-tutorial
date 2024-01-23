@@ -88,3 +88,31 @@ pub fn apply_prefab(mb: &mut MapBuilder, rng: &mut RandomNumberGenerator) {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::empty::EmptyArchitect;
+
+    use super::*;
+    fn map_builder() -> MapBuilder {
+        MapBuilder::new()
+    }
+
+    fn count_walls(map: Map) -> usize {
+        map.tiles
+            .iter()
+            .filter(|&&tile| tile == TileType::Wall)
+            .count()
+    }
+
+    #[test]
+    fn test_place_fortress() {
+        let mut rng = RandomNumberGenerator::new();
+
+        let mut mb = EmptyArchitect {}.build(&mut rng);
+
+        apply_prefab(&mut mb, &mut rng);
+
+        assert_eq!(count_walls(mb.map), 32)
+    }
+}
